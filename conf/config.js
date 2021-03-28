@@ -20,6 +20,7 @@ config = {
             stream: process.stdout
         }]
     },
+    sflEngineSecret:'',
     host: '',
     mysql: {
         host: '',
