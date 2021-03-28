@@ -8,13 +8,17 @@ const refCode = async (data) => {
         let refCodeInfo = await dbMysql.query(` 
                 SELECT r.affiliate_id AS affiliateId,
                        concat(a.first_name, " ", a.last_name) AS affiliateName,
-                       a.employee_id AS affiliateAE,
-                       a.account_mgr_id AS affiliateAM,
+                       a.employee_id AS accountExecutiveId,
+                       (SELECT e.name FROM employees e WHERE e.id = a.employee_id ) AS accountExecutiveName,                       
+                       a.account_mgr_id AS accountManagerId,
+                       (SELECT e.name FROM employees e WHERE e.id = a.account_mgr_id ) AS accountManagerName,
                        a.\`status\` AS affiliateStatus,
                        a.affiliate_type AS affiliateType,       
                        r.campaign_id AS campaignId,
                        r.program_id AS programId,
-                       r.product_id AS productId
+                       r.product_id AS productId,
+                       a.is_traffic_blocked AS isTrafficBlocked,
+                       a.is_lock_payment AS isLockPayment                       
                 FROM ref_codes AS r
                 LEFT JOIN affiliates AS a ON r.affiliate_id = a.id
                 WHERE r.id = ?
