@@ -5,6 +5,7 @@ const config = require('plain-config')()
 const logger = require('bunyan-loader')(config.log).child({scope: 'worker.js'})
 const cors = require('cors')
 const crypto = require('crypto')
+const metrics = require('./lib/metrics')
 
 app.use(cors())
 
@@ -32,6 +33,7 @@ app.use(async (req, res, next) => {
     } else {
         // logger.info('validation failed!', 'got:', req.query.hash ? req.query.hash.toLowerCase() : 'undefined', 'must be:', hash);
         logger.info(`validation failed! got ${req.query.hash} must be: ${hash}`)
+        metrics.influxdb(500, `validationFailed`)
         res.status(403).end('forbidden')
     }
 })

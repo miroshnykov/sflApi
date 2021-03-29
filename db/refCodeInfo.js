@@ -1,4 +1,5 @@
 let dbMysql = require('./mysqlDb').get()
+const metrics = require('../lib/metrics')
 
 const refCode = async (data) => {
 
@@ -26,18 +27,35 @@ const refCode = async (data) => {
         await dbMysql.end()
 
 
-        if (refCodeInfo.length ===0){
+        if (refCodeInfo.length === 0) {
             return {
-                affiliateId: 66666,
-                affiliateName: "DefaultAff",
-                affiliateAE: 0,
-                affiliateAM: 0,
+                affiliateId: 4391,
+                affiliateName: "Banktan Trax",
+                accountExecutiveId: 0,
+                accountExecutiveName: '',
+                accountManagerId: 0,
+                accountManagerName: '',
                 affiliateStatus: "active",
                 affiliateType: "external",
-                campaignId: 66666,
-                programId: 0,
+                isLockPayment: 0,
+                isTrafficBlocked: 0,
+                campaignId: 5134236,
+                programId: 410,
                 productId: 0
             }
+
+            // {
+            //     id: 5134236,
+            //         affiliate_id: 4391,
+            //         campaign_id: 343516,
+            //         program_id: 410,
+            //         product_id: 0,
+            //         google_account_id: 1,
+            //         program_site_id: 1,
+            //         program_site_name: "Jo-Games",
+            //         program_site_base_url: "https://www.jo-games.com/"
+            // }
+
         }
         let affiliateId = refCodeInfo[0].affiliateId
 
@@ -52,7 +70,7 @@ const refCode = async (data) => {
         let affiliateProductProgramId = 0
         let programId = 0
         // console.log(affiliateProductProgram)
-        if (affiliateProductProgram.length !==0) {
+        if (affiliateProductProgram.length !== 0) {
             affiliateProductProgramId = affiliateProductProgram[0].affiliateProductProgramId
         } else {
             let productProgram = await dbMysql.query(` 
@@ -62,7 +80,7 @@ const refCode = async (data) => {
         `, [prodId])
             await dbMysql.end()
 
-            if (productProgram.length !==0) {
+            if (productProgram.length !== 0) {
                 programId = productProgram[0].programId
             } else {
                 programId = 0
@@ -75,9 +93,11 @@ const refCode = async (data) => {
 
         console.timeEnd('refCode')
         // console.log(`refCode count:${result.length}\n`)
+        metrics.influxdb(200, `getRefCodeFromDB`)
         return refCodeInfo[0]
     } catch (e) {
         console.log(e)
+        metrics.influxdb(500, `getRefCodeDBSQLError`)
     }
 }
 
