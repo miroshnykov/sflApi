@@ -16,6 +16,10 @@ app.get('/favicon.ico', (req, res) => {
     res.sendStatus(404)
 })
 
+app.use('/health', (req, res, next) => {
+    res.send('Ok')
+})
+
 app.use(async (req, res, next) => {
     let debugging = req.query.debugging
 
@@ -39,10 +43,6 @@ app.use(async (req, res, next) => {
 })
 
 app.use('/refcode', refCode.getRefCodeInfo)
-
-app.use('/health', (req, res, next) => {
-    res.send('Ok')
-})
 
 app.use(require('./middlewares/not-found'));
 
