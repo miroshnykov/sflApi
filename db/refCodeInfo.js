@@ -5,7 +5,6 @@ const refCode = async (data) => {
 
     let {ref, prodId} = data
     try {
-        console.time('refCode')
         let refCodeInfo = await dbMysql.query(` 
                 SELECT r.affiliate_id AS affiliateId,
                        concat(a.first_name, " ", a.last_name) AS affiliateName,
@@ -96,7 +95,6 @@ const refCode = async (data) => {
         // console.log('affiliateProductProgram:',affiliateProductProgram[0])
 
         // console.log('refCodeInfo:', refCodeInfo)
-        console.timeEnd('refCode')
         // console.log(`refCode count:${result.length}\n`)
         metrics.influxdb(200, `getRefCodeFromDB`)
         return refCodeInfo[0]
