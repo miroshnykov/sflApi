@@ -16,10 +16,10 @@ let recipeData = {
             let redisKey = `${inputRefCode}-${inputProd}`
             let cacheData = await getDataCache(redisKey)
             let response
-            if (cacheData) {
-                response = cacheData
-                metrics.influxdb(200, `getRefCodeFromRedis`)
-            } else {
+            // if (cacheData) {
+            //     response = cacheData
+            //     metrics.influxdb(200, `getRefCodeFromRedis`)
+            // } else {
                 response = await refCode(inputData)
                 if (response) {
 
@@ -27,7 +27,7 @@ let recipeData = {
                     metrics.influxdb(200, `setDataToCache`)
 
                 }
-            }
+            // }
 
             res.send(response)
 

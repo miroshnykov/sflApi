@@ -29,7 +29,7 @@ const refCode = async (data) => {
 
         if (refCodeInfo.length === 0) {
             return {
-                affiliateId: 4391,
+                affiliateId: '4391',
                 affiliateName: "Banktan Trax",
                 accountExecutiveId: 0,
                 accountExecutiveName: '',
@@ -39,8 +39,8 @@ const refCode = async (data) => {
                 affiliateType: "external",
                 isLockPayment: 0,
                 isTrafficBlocked: 0,
-                campaignId: 5134236,
-                programId: 410,
+                campaignId: '5134236',
+                programId: '410',
                 productId: 0
             }
 
@@ -87,10 +87,15 @@ const refCode = async (data) => {
             }
         }
 
-        refCodeInfo[0].programId = affiliateProductProgramId ? affiliateProductProgramId : programId
-        refCodeInfo[0].productId = prodId
+        let programIdStr =  affiliateProductProgramId ? affiliateProductProgramId : programId
+        let campaignId = refCodeInfo[0].campaignId
+        refCodeInfo[0].programId = programIdStr.toString()
+        refCodeInfo[0].productId = prodId.toString()
+        refCodeInfo[0].affiliateId = affiliateId.toString()
+        refCodeInfo[0].campaignId = campaignId.toString()
         // console.log('affiliateProductProgram:',affiliateProductProgram[0])
 
+        // console.log('refCodeInfo:', refCodeInfo)
         console.timeEnd('refCode')
         // console.log(`refCode count:${result.length}\n`)
         metrics.influxdb(200, `getRefCodeFromDB`)
