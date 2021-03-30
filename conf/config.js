@@ -33,11 +33,7 @@ config = {
         host: 'https://influx.surge.systems/influxdb',
         project: 'sfl-api',
         intervalRequest: 100
-    },
-    sflApi:{
-        secret = "XXX",     
-        host = "https://sfl-api-stage1.surge.systems/"
-    } 
+    }
 }
 
 module.exports = config
