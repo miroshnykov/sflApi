@@ -1,6 +1,7 @@
 const config = require('plain-config')()
 const {catchHandler} = require('../middlewares/catchErr')
-const {refCode} = require('../db/refCodeInfo')
+// const {refCode} = require('../db/refCodeInfo')
+const {refCode} = require('../db/refCodeInfoPool')
 const {getDataCache, setDataCache} = require('../cache/redis')
 const metrics = require('../lib/metrics')
 const {rangeTime} = require('../lib/utils')
