@@ -20,6 +20,10 @@ const setRedis = async (key, value) => (await redisClient.set(key, value, "EX", 
 
 const getRedis = async (value) => (await redisClient.get(value))
 
+const getKeys = async (value) => (await redisClient.keys(value))
+
+const deleteRedis = async (key) => (await redisClient.del(key))
+
 const setDataCache = async (key, data) => {
 
     try {
@@ -42,7 +46,33 @@ const getDataCache = async (key) => {
     }
 }
 
+const getKeysCache = async (key) => {
+
+    try {
+
+        return await getKeys(key)
+
+    } catch (e) {
+        catchHandler(e, 'getKeysCacheError')
+        return []
+    }
+}
+
+const delDataCache = async (key) => {
+
+    try {
+        await deleteRedis(key)
+        // console.log(`*** Redis DEL { ${key} } \n`)
+
+    } catch (e) {
+        catchHandler(e, 'delDataCache')
+    }
+}
+
+
 module.exports = {
     getDataCache,
-    setDataCache
+    setDataCache,
+    getKeysCache,
+    delDataCache
 }

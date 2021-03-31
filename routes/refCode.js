@@ -20,34 +20,47 @@ let recipeData = {
 
             inputData.ref = inputRefCode
             inputData.prodId = inputProd
+
+            // console.log('inputData:',inputData)
             let redisKey = `${inputRefCode}-${inputProd}`
             let cacheData = await getDataCache(redisKey)
-            let response
-            // if (cacheData) {
-            //     response = cacheData
-            //     metrics.influxdb(200, `getRefCodeFromRedis`)
-            // } else {
-                response = await refCode(inputData)
+            if (cacheData){
+                console.log(' *** GET RefCodeProgram from cacheData')
+                timeSegmentProcessing = performance.now()
+                let totalTime = timeSegmentProcessing - startTimeSegmentProcessing
+                let timeSpeed = rangeTime(totalTime)
+                metrics.influxdb(200, `Speed-Cache-${timeSpeed}`)
+                metrics.influxdb(200, `refCodeFromCache`)
+                res.send(cacheData)
+                return
+            }
 
-                if (response) {
+            let clusterCacheResult = await checkClusterCache(inputData)
+            if (clusterCacheResult) {
+                console.log(' *** GET RefCodeProgram  from cacheCluster')
+                timeSegmentProcessing = performance.now()
+                let totalTime = timeSegmentProcessing - startTimeSegmentProcessing
+                let timeSpeed = rangeTime(totalTime)
+                metrics.influxdb(200, `Speed-Cache-Cluster-${timeSpeed}`)
+                metrics.influxdb(200, `refCodeFromCacheCluster`)
+                res.send(clusterCacheResult)
+                return
+            }
 
-                    timeSegmentProcessing = performance.now()
-                    let totalTime = timeSegmentProcessing - startTimeSegmentProcessing
-                    // if (rangeTime(totalTime) > 50) {
-                    let timeSpeed =rangeTime(totalTime)
-                    console.log('rangeTime:',timeSpeed)
-                    metrics.influxdb(200, `Speed-${timeSpeed}`)
-                    // }
+            let refCodeDb = await refCode(inputData)
 
-                    await setDataCache(redisKey, response)
-                    metrics.influxdb(200, `setDataToCache`)
+            if (refCodeDb) {
+                console.log(' GET from database')
+                timeSegmentProcessing = performance.now()
+                let totalTime = timeSegmentProcessing - startTimeSegmentProcessing
+                let timeSpeed = rangeTime(totalTime)
+                metrics.influxdb(200, `Speed-DB-${timeSpeed}`)
+                metrics.influxdb(200, `refCodeFromDatabase`)
+                await setDataCache(redisKey, refCodeDb)
+                metrics.influxdb(200, `setDataToCache`)
+                res.send(refCodeDb)
+            }
 
-                }
-            // }
-
-
-
-            res.send(response)
 
         } catch (e) {
             catchHandler(e, 'getRefCodeInfoErr')
@@ -56,6 +69,62 @@ let recipeData = {
             next(e)
         }
     }
+}
+
+const checkClusterCache = async (inputData) => {
+    try {
+        let refCodeClusterKey = `refCode-${inputData.ref}`
+
+        let refCodeClusterObj = await getDataCache(refCodeClusterKey)
+        // console.log('Redis Cluster refCodeCluster:', refCodeClusterObj)
+
+        if (!refCodeClusterObj) return
+
+        const {affiliateId} = refCodeClusterObj
+        let productId = inputData.prodId
+        let affiliateProductProgramClusterKey = `affiliateProductPrograms-${affiliateId}-${productId}`
+        // console.log('affiliateProductProgramClusterKey:',affiliateProductProgramClusterKey)
+        let affiliateProductProgramCluster = await getDataCache(affiliateProductProgramClusterKey)
+
+        // console.log('Redis Cluster affiliateProductProgramCluster:', affiliateProductProgramCluster)
+        if (affiliateProductProgramCluster) {
+            const {affiliateProductProgramId} = affiliateProductProgramCluster
+            refCodeClusterObj.programId = affiliateProductProgramId
+            return reformatRefCodeData(refCodeClusterObj)
+        } else {
+            let acProductClusterKey = `acProduct-${productId}`
+            let acProductCluster = await getDataCache(acProductClusterKey)
+
+            console.log('acProductCluster:', acProductCluster)
+            if (!acProductCluster) {
+                console.log('acProductCluster does not exists in redisCluster')
+                return
+            }
+            const {programId} = acProductCluster
+            refCodeClusterObj.programId = programId
+            // console.log('Redis Cluster acProductClusterObj:', refCodeClusterObj)
+            return reformatRefCodeData(refCodeClusterObj)
+        }
+
+    } catch (e) {
+        console.error('checkClusterCacheError:', e)
+    }
+
+}
+
+const reformatRefCodeData = (refCodeClusterObj) => {
+
+    try {
+        // console.log(refCodeClusterObj)
+        refCodeClusterObj.programId = refCodeClusterObj.programId.toString()
+        refCodeClusterObj.productId = refCodeClusterObj.productId.toString()
+        refCodeClusterObj.affiliateId = refCodeClusterObj.affiliateId.toString()
+        refCodeClusterObj.campaignId = refCodeClusterObj.campaignId.toString()
+        return refCodeClusterObj
+    } catch (e) {
+        console.log('reformatRefCodeData:', e)
+    }
+
 }
 
 module.exports = recipeData

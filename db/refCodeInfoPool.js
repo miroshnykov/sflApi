@@ -71,7 +71,7 @@ const refCode = async (data) => {
             }
         }
 
-        let programIdStr =  affiliateProductProgramId ? affiliateProductProgramId : programId
+        let programIdStr = affiliateProductProgramId ? affiliateProductProgramId : programId
         let campaignId = refCodeInfo[0].campaignId
         refCodeInfo[0].programId = programIdStr.toString()
         refCodeInfo[0].productId = prodId.toString()
