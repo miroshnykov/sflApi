@@ -20,8 +20,6 @@ app.use('/health', (req, res, next) => {
     res.send('Ok')
 })
 
-// http://localhost:8097/refcode?ref=5204378&prod=1&debugging=debugging
-// https://sfl-api-stage1.surge.systems/refcode?ref=5204378&prod=1&debugging=debugging
 app.use(async (req, res, next) => {
     let debugging = req.query.debugging
 

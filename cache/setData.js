@@ -55,7 +55,7 @@ const setAffiliateProductProgram = async () => {
         stream.pipe(gunzip).pipe(jsonStream)
         jsonStream.on('data', async (item) => {
             if (!item.affiliatesId) {
-                metrics.influxdb(500, `setAffiliateProductProgramsEmpty`)
+                metrics.influxdb(500, `setAffiliateProductProgramsEmpty-${hostname}`)
                 return
             }
             await setDataCache(`affiliateProductPrograms-${item.affiliatesId}-${item.productId}`, item)
@@ -117,7 +117,7 @@ const setAcProducts = async () => {
         stream.pipe(gunzip).pipe(jsonStream)
         jsonStream.on('data', async (item) => {
             if (!item.id) {
-                metrics.influxdb(500, `setAcProductsEmpty`)
+                metrics.influxdb(500, `setAcProductsEmpty-${hostname}`)
                 return
             }
             await setDataCache(`acProduct-${item.id}`, item)
@@ -179,7 +179,7 @@ const setRefCodesFile = async () => {
         stream.pipe(gunzip).pipe(jsonStream)
         jsonStream.on('data', async (item) => {
             if (!item.refCodeId) {
-                metrics.influxdb(500, `setRefCodesEmpty`)
+                metrics.influxdb(500, `setRefCodesEmpty-${hostname}`)
                 return
             }
             await setDataCache(`refCode-${item.refCodeId}`, item)
