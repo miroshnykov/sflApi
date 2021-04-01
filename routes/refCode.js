@@ -8,6 +8,11 @@ const {rangeTime} = require('../lib/utils')
 
 const {performance} = require('perf_hooks')
 
+// http://localhost:8097/refcode?ref=5204378&prod=1&debugging=debugging
+// https://sfl-api-stage1.surge.systems/refcode?ref=5204378&prod=1&debugging=debugging
+
+// https://sfl-api.surge.systems/refcode?ref=5204378&prod=1&debugging=debugging
+
 let recipeData = {
     getRefCodeInfo: async (req, res, next) => {
         try {
