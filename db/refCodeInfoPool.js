@@ -1,11 +1,13 @@
 let dbMysql = require('./mysqlDb').get()
+let mysqlPool = require('./mysqlPool')
 const metrics = require('../lib/metrics')
 
 const refCode = async (data) => {
 
     let {ref, prodId} = data
     try {
-        let refCodeInfo = await dbMysql.query(` 
+
+        let refCodeInfo = await mysqlPool.query(` 
                 SELECT r.affiliate_id AS affiliateId,
                        concat(a.first_name, " ", a.last_name) AS affiliateName,
                        a.employee_id AS accountExecutiveId,
@@ -16,6 +18,7 @@ const refCode = async (data) => {
                        a.affiliate_type AS affiliateType,       
                        r.campaign_id AS campaignId,
                        r.program_id AS programId,
+                       (SELECT p.name FROM programs p WHERE p.id = r.program_id) AS programName, 
                        r.product_id AS productId,
                        a.is_traffic_blocked AS isTrafficBlocked,
                        a.is_lock_payment AS isLockPayment                       
@@ -23,8 +26,6 @@ const refCode = async (data) => {
                 LEFT JOIN affiliates AS a ON r.affiliate_id = a.id
                 WHERE r.id = ?
         `, [ref])
-        await dbMysql.end()
-
 
         if (refCodeInfo.length === 0) {
             return {
@@ -43,60 +44,48 @@ const refCode = async (data) => {
                 productId: 0
             }
 
-            // {
-            //     id: 5134236,
-            //         affiliate_id: 4391,
-            //         campaign_id: 343516,
-            //         program_id: 410,
-            //         product_id: 0,
-            //         google_account_id: 1,
-            //         program_site_id: 1,
-            //         program_site_name: "Jo-Games",
-            //         program_site_base_url: "https://www.jo-games.com/"
-            // }
-
         }
         let affiliateId = refCodeInfo[0].affiliateId
 
-        // prodId = 31
-        let affiliateProductProgram = await dbMysql.query(` 
+
+        let affiliateProductProgram = await mysqlPool.query(` 
             SELECT program_id as affiliateProductProgramId
             FROM affiliate_product_programs
             WHERE affiliate_id = ?
             AND product_id = ?
         `, [affiliateId, prodId])
-        await dbMysql.end()
         let affiliateProductProgramId = 0
         let programId = 0
-        // console.log(affiliateProductProgram)
-        if (affiliateProductProgram.length !== 0) {
-            affiliateProductProgramId = affiliateProductProgram[0].affiliateProductProgramId
-        } else {
-            let productProgram = await dbMysql.query(` 
-                SELECT program_id as programId 
+        let productName = ''
+
+        let productProgram = await mysqlPool.query(` 
+                SELECT program_id as programId, name AS productName
                 FROM ac_products
                 WHERE id = ?
         `, [prodId])
-            await dbMysql.end()
 
-            if (productProgram.length !== 0) {
-                programId = productProgram[0].programId
-            } else {
-                programId = 0
-            }
+        if (productProgram.length !== 0) {
+            programId = productProgram[0].programId
+            productName = productProgram[0].productName
+        } else {
+            programId = 0
         }
 
-        let programIdStr =  affiliateProductProgramId ? affiliateProductProgramId : programId
+        // console.log(affiliateProductProgram)
+        if (affiliateProductProgram.length !== 0) {
+            affiliateProductProgramId = affiliateProductProgram[0].affiliateProductProgramId
+        }
+
+        let programIdStr = affiliateProductProgramId ? affiliateProductProgramId : programId
         let campaignId = refCodeInfo[0].campaignId
         refCodeInfo[0].programId = programIdStr.toString()
         refCodeInfo[0].productId = prodId.toString()
         refCodeInfo[0].affiliateId = affiliateId.toString()
         refCodeInfo[0].campaignId = campaignId.toString()
-        // console.log('affiliateProductProgram:',affiliateProductProgram[0])
+        refCodeInfo[0].productName = productName
 
-        // console.log('refCodeInfo:', refCodeInfo)
-        // console.log(`refCode count:${result.length}\n`)
         metrics.influxdb(200, `getRefCodeFromDB`)
+
         return refCodeInfo[0]
     } catch (e) {
         console.log(e)

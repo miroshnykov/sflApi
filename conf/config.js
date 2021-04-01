@@ -21,6 +21,14 @@ config = {
         }]
     },
     sflEngineSecret:'',
+    sflApiCache: {
+        host: '',
+    },
+    recipe: {
+        acProducts: '/tmp/recipe_sfl_api/acProducts.json.gz',
+        affiliateProductProgram: '/tmp/recipe_sfl_api/affiliateProductProgram.json.gz',
+        refCodes: '/tmp/recipe_sfl_api/refCodesData.json.gz'
+    },
     host: '',
     mysql: {
         host: '',
@@ -32,7 +40,7 @@ config = {
     influxdb: {
         host: 'https://influx.surge.systems/influxdb',
         project: 'sfl-api',
-        intervalRequest: 100
+        intervalRequest: 1
     }
 }
 
