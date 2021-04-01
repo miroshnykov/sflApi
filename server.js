@@ -133,7 +133,7 @@ if (cluster.isMaster) {
         }
     }
 
-    setInterval(getRecipeFromSflApiCache, 1800000) // 1800000 -> 30 min
+    setInterval(getRecipeFromSflApiCache, 3600000) // 3600000 -> 60 min
     setTimeout(getRecipeFromSflApiCache, 45000) // 45000 -> 45 sec
 
 
