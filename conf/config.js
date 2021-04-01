@@ -22,7 +22,7 @@ config = {
     },
     sflEngineSecret:'',
     sflApiCache: {
-        host: '',
+        host: 'https://sfl-api-cache.surge.systems/',
     },
     recipe: {
         acProducts: '/tmp/recipe_sfl_api/acProducts.json.gz',
