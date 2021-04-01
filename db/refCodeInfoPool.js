@@ -18,6 +18,7 @@ const refCode = async (data) => {
                        a.affiliate_type AS affiliateType,       
                        r.campaign_id AS campaignId,
                        r.program_id AS programId,
+                       (SELECT p.name FROM programs p WHERE p.id = r.program_id) AS programName, 
                        r.product_id AS productId,
                        a.is_traffic_blocked AS isTrafficBlocked,
                        a.is_lock_payment AS isLockPayment                       
@@ -46,6 +47,7 @@ const refCode = async (data) => {
         }
         let affiliateId = refCodeInfo[0].affiliateId
 
+
         let affiliateProductProgram = await mysqlPool.query(` 
             SELECT program_id as affiliateProductProgramId
             FROM affiliate_product_programs
@@ -54,21 +56,24 @@ const refCode = async (data) => {
         `, [affiliateId, prodId])
         let affiliateProductProgramId = 0
         let programId = 0
-        // console.log(affiliateProductProgram)
-        if (affiliateProductProgram.length !== 0) {
-            affiliateProductProgramId = affiliateProductProgram[0].affiliateProductProgramId
-        } else {
-            let productProgram = await mysqlPool.query(` 
-                SELECT program_id as programId 
+        let productName = ''
+
+        let productProgram = await mysqlPool.query(` 
+                SELECT program_id as programId, name AS productName
                 FROM ac_products
                 WHERE id = ?
         `, [prodId])
 
-            if (productProgram.length !== 0) {
-                programId = productProgram[0].programId
-            } else {
-                programId = 0
-            }
+        if (productProgram.length !== 0) {
+            programId = productProgram[0].programId
+            productName = productProgram[0].productName
+        } else {
+            programId = 0
+        }
+
+        // console.log(affiliateProductProgram)
+        if (affiliateProductProgram.length !== 0) {
+            affiliateProductProgramId = affiliateProductProgram[0].affiliateProductProgramId
         }
 
         let programIdStr = affiliateProductProgramId ? affiliateProductProgramId : programId
@@ -77,6 +82,7 @@ const refCode = async (data) => {
         refCodeInfo[0].productId = prodId.toString()
         refCodeInfo[0].affiliateId = affiliateId.toString()
         refCodeInfo[0].campaignId = campaignId.toString()
+        refCodeInfo[0].productName = productName
 
         metrics.influxdb(200, `getRefCodeFromDB`)
 
