@@ -115,7 +115,7 @@ if (cluster.isMaster) {
                     metrics.influxdb(500, `setRedisRefCodesError-${computerName}`)
                 }
 
-            }, 30000) // 30 sec
+            }, 50000) // 50 sec
 
         })
     })
