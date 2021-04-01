@@ -92,22 +92,27 @@ const checkClusterCache = async (inputData) => {
         let affiliateProductProgramCluster = await getDataCache(affiliateProductProgramClusterKey)
 
         // console.log('Redis Cluster affiliateProductProgramCluster:', affiliateProductProgramCluster)
+
+        let acProductClusterKey = `acProduct-${productId}`
+        let acProductCluster = await getDataCache(acProductClusterKey)
+        const {programId,productName} = acProductCluster
+
+
         if (affiliateProductProgramCluster) {
             const {affiliateProductProgramId} = affiliateProductProgramCluster
             refCodeClusterObj.programId = affiliateProductProgramId
+            refCodeClusterObj.productName = productName
             return reformatRefCodeData(refCodeClusterObj)
         } else {
-            let acProductClusterKey = `acProduct-${productId}`
-            let acProductCluster = await getDataCache(acProductClusterKey)
-
             console.log('acProductCluster:', acProductCluster)
             if (!acProductCluster) {
                 console.log('acProductCluster does not exists in redisCluster')
                 return
             }
-            const {programId} = acProductCluster
+
             refCodeClusterObj.programId = programId
-            // console.log('Redis Cluster acProductClusterObj:', refCodeClusterObj)
+            refCodeClusterObj.productName = productName
+            console.log('Redis Cluster acProductClusterObj:', refCodeClusterObj)
             return reformatRefCodeData(refCodeClusterObj)
         }
 
