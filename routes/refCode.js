@@ -104,7 +104,7 @@ const checkClusterCache = async (inputData) => {
             refCodeClusterObj.productName = productName
             return reformatRefCodeData(refCodeClusterObj)
         } else {
-            console.log('acProductCluster:', acProductCluster)
+            // console.log('acProductCluster:', acProductCluster)
             if (!acProductCluster) {
                 console.log('acProductCluster does not exists in redisCluster')
                 return
@@ -112,7 +112,7 @@ const checkClusterCache = async (inputData) => {
 
             refCodeClusterObj.programId = programId
             refCodeClusterObj.productName = productName
-            console.log('Redis Cluster acProductClusterObj:', refCodeClusterObj)
+            // console.log('Redis Cluster acProductClusterObj:', refCodeClusterObj)
             return reformatRefCodeData(refCodeClusterObj)
         }
 
