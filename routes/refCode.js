@@ -29,7 +29,7 @@ let recipeData = {
             // console.log('inputData:',inputData)
             let redisKey = `${inputRefCode}-${inputProd}`
             let cacheData = await getDataCache(redisKey)
-            if (cacheData){
+            if (cacheData) {
                 console.log(' *** GET RefCodeProgram from cacheData')
                 timeSegmentProcessing = performance.now()
                 let totalTime = timeSegmentProcessing - startTimeSegmentProcessing
@@ -95,7 +95,7 @@ const checkClusterCache = async (inputData) => {
 
         let acProductClusterKey = `acProduct-${productId}`
         let acProductCluster = await getDataCache(acProductClusterKey)
-        const {programId,productName} = acProductCluster
+        const {programId, productName, id} = acProductCluster
 
 
         if (affiliateProductProgramCluster) {
@@ -112,6 +112,7 @@ const checkClusterCache = async (inputData) => {
 
             refCodeClusterObj.programId = programId
             refCodeClusterObj.productName = productName
+            refCodeClusterObj.productId = id || 0
             // console.log('Redis Cluster acProductClusterObj:', refCodeClusterObj)
             return reformatRefCodeData(refCodeClusterObj)
         }

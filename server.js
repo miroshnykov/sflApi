@@ -115,18 +115,15 @@ if (cluster.isMaster) {
         console.log('Got affiliateProductProgramFile:', affiliateProductProgramFile)
         stream.pipe(fs.createWriteStream(affiliateProductProgramFile))
         stream.on('end', () => {
-            // let size = getFileSize(campaignsFile) || 0
-            // logger.info(`campaigns file received, ${campaignsFile}, size:${size}`)
-            // metrics.influxdb(200, `fileReceivedCampaigns-size-${size}`)
             setTimeout(async () => {
                 if (config.env === 'development') return
                 try {
                     logger.info(` *** set Redis AffiliateProductProgram`)
                     await setAffiliateProductProgram()
-                    metrics.influxdb(200, `setRedisCampaigns-${computerName}`)
+                    metrics.influxdb(200, `setRedisAffiliateProductProgram-${computerName}`)
                 } catch (e) {
-                    logger.error(`setRedisCampaignsError:`, e)
-                    metrics.influxdb(500, `setRedisCampaignsError-${computerName}`)
+                    logger.error(`setRedisAffiliateProductProgramError:`, e)
+                    metrics.influxdb(500, `setRedisAffiliateProductProgramError-${computerName}`)
                 }
 
             }, 60000) // 60000 1m
@@ -138,9 +135,6 @@ if (cluster.isMaster) {
         console.log('Got acProductsFile:', acProductsFile)
         stream.pipe(fs.createWriteStream(acProductsFile))
         stream.on('end', () => {
-            // let size = getFileSize(campaignsFile) || 0
-            // logger.info(`campaigns file received, ${campaignsFile}, size:${size}`)
-            // metrics.influxdb(200, `fileReceivedCampaigns-size-${size}`)
             setTimeout(async () => {
                 if (config.env === 'development') return
                 try {
@@ -148,7 +142,7 @@ if (cluster.isMaster) {
                     await setAcProducts()
                     metrics.influxdb(200, `setRedisAcProducts-${computerName}`)
                 } catch (e) {
-                    logger.error(`setRedisCampaignsError:`, e)
+                    logger.error(`setRedisAcProductsError:`, e)
                     metrics.influxdb(500, `setRedisAcProductsError-${computerName}`)
                 }
 
@@ -161,9 +155,6 @@ if (cluster.isMaster) {
         console.log('Got refCodesFile:', refCodesFile)
         stream.pipe(fs.createWriteStream(refCodesFile))
         stream.on('end', () => {
-            // let size = getFileSize(campaignsFile) || 0
-            // logger.info(`campaigns file received, ${campaignsFile}, size:${size}`)
-            // metrics.influxdb(200, `fileReceivedCampaigns-size-${size}`)
             setTimeout(async () => {
                 if (config.env === 'development') return
                 try {
@@ -183,7 +174,7 @@ if (cluster.isMaster) {
     const getRecipeFromSflApiCache = async () => {
         if (config.env === 'development') return
         try {
-            logger.info('get recipe file from sfl-api-cache')
+            logger.info(' *** getRecipeFromSflApiCache get recipe file from sfl-api-cache')
             socket.emit('sendingAffiliateProductProgram')
             socket.emit('sendingAcProducts')
             socket.emit('sendingRefCodes')

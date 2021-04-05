@@ -19,7 +19,6 @@ const refCode = async (data) => {
                        r.campaign_id AS campaignId,
                        r.program_id AS programId,
                        (SELECT p.name FROM programs p WHERE p.id = r.program_id) AS programName, 
-                       r.product_id AS productId,
                        a.is_traffic_blocked AS isTrafficBlocked,
                        a.is_lock_payment AS isLockPayment                       
                 FROM ref_codes AS r
@@ -56,10 +55,13 @@ const refCode = async (data) => {
         `, [affiliateId, prodId])
         let affiliateProductProgramId = 0
         let programId = 0
+        let productId = 0
         let productName = ''
 
         let productProgram = await mysqlPool.query(` 
-                SELECT program_id as programId, name AS productName
+                SELECT program_id as programId, 
+                       name AS productName,
+                       id AS productId
                 FROM ac_products
                 WHERE id = ?
         `, [prodId])
@@ -67,8 +69,7 @@ const refCode = async (data) => {
         if (productProgram.length !== 0) {
             programId = productProgram[0].programId
             productName = productProgram[0].productName
-        } else {
-            programId = 0
+            productId = productProgram[0].productId
         }
 
         // console.log(affiliateProductProgram)
@@ -79,10 +80,10 @@ const refCode = async (data) => {
         let programIdStr = affiliateProductProgramId ? affiliateProductProgramId : programId
         let campaignId = refCodeInfo[0].campaignId
         refCodeInfo[0].programId = programIdStr.toString()
-        refCodeInfo[0].productId = prodId.toString()
         refCodeInfo[0].affiliateId = affiliateId.toString()
         refCodeInfo[0].campaignId = campaignId.toString()
         refCodeInfo[0].productName = productName
+        refCodeInfo[0].productId = productId
 
         metrics.influxdb(200, `getRefCodeFromDB`)
 
