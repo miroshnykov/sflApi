@@ -103,6 +103,7 @@ const checkClusterCache = async (inputData) => {
             const {affiliateProductProgramId} = affiliateProductProgramCluster
             refCodeClusterObj.programId = affiliateProductProgramId
             refCodeClusterObj.productName = productName
+            refCodeClusterObj.productId = id || 0
             return reformatRefCodeData(refCodeClusterObj)
         } else {
             // console.log('acProductCluster:', acProductCluster)
