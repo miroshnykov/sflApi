@@ -27,6 +27,7 @@ const refCode = async (data) => {
         `, [ref])
 
         if (refCodeInfo.length === 0) {
+            metrics.influxdb(500, `refCodeDataIsNullSetBanktanTraxDefaultAff`)
             return {
                 affiliateId: '4391',
                 affiliateName: "Banktan Trax",
