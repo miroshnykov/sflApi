@@ -40,7 +40,7 @@ config = {
     influxdb: {
         host: 'https://influx.surge.systems/influxdb',
         project: 'sfl-api',
-        intervalRequest: 1
+        intervalRequest: 10
     }
 }
 

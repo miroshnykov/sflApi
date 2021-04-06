@@ -42,7 +42,6 @@ const setAffiliateProductProgram = async () => {
             await delDataCache(affiliateProductProgram)
         }
 
-        // console.time('setCampaignsInsertSpeed')
         let gunzip = zlib.createGunzip();
 
         // console.log('sflOffer config:', config.sflOffer)
@@ -60,10 +59,6 @@ const setAffiliateProductProgram = async () => {
             }
             await setDataCache(`affiliateProductPrograms-${item.affiliatesId}-${item.productId}`, item)
         })
-
-        // jsonStream.on('end', () => {
-        //     console.log('campaigns end')
-        // })
 
 
     } catch (e) {
@@ -98,13 +93,11 @@ const setAcProducts = async () => {
         // }
 
         let acProducts = await getKeysCache('acProduct-*')
-        // console.log('campaigns count:',campaigns.length)
 
         for (const acProduct of acProducts) {
             await delDataCache(acProduct)
         }
 
-        // console.time('setCampaignsInsertSpeed')
         let gunzip = zlib.createGunzip();
 
         // console.log('sflOffer config:', config.sflOffer)
@@ -122,10 +115,6 @@ const setAcProducts = async () => {
             }
             await setDataCache(`acProduct-${item.id}`, item)
         })
-
-        // jsonStream.on('end', () => {
-        //     console.log('campaigns end')
-        // })
 
 
     } catch (e) {
@@ -160,13 +149,11 @@ const setRefCodesFile = async () => {
         // }
 
         let refCodes = await getKeysCache('refCode-*')
-        // console.log('campaigns count:',campaigns.length)
 
         for (const refCode of refCodes) {
             await delDataCache(refCode)
         }
 
-        // console.time('setCampaignsInsertSpeed')
         let gunzip = zlib.createGunzip();
 
         // console.log('sflOffer config:', config.sflOffer)
@@ -184,10 +171,6 @@ const setRefCodesFile = async () => {
             }
             await setDataCache(`refCode-${item.refCodeId}`, item)
         })
-
-        // jsonStream.on('end', () => {
-        //     console.log('campaigns end')
-        // })
 
 
     } catch (e) {

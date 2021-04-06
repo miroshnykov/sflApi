@@ -29,8 +29,8 @@ let recipeData = {
             // console.log('inputData:',inputData)
             let redisKey = `${inputRefCode}-${inputProd}`
             let cacheData = await getDataCache(redisKey)
-            if (cacheData){
-                console.log(' *** GET RefCodeProgram from cacheData')
+            if (cacheData) {
+                console.log(` *** GET RefCodeProgram from cacheData:${JSON.stringify(cacheData)}`)
                 timeSegmentProcessing = performance.now()
                 let totalTime = timeSegmentProcessing - startTimeSegmentProcessing
                 let timeSpeed = rangeTime(totalTime)
@@ -42,7 +42,7 @@ let recipeData = {
 
             let clusterCacheResult = await checkClusterCache(inputData)
             if (clusterCacheResult) {
-                console.log(' *** GET RefCodeProgram  from cacheCluster')
+                console.log(` *** GET RefCodeProgram  from cacheCluster:${JSON.stringify(clusterCacheResult)}`)
                 timeSegmentProcessing = performance.now()
                 let totalTime = timeSegmentProcessing - startTimeSegmentProcessing
                 let timeSpeed = rangeTime(totalTime)
@@ -55,7 +55,7 @@ let recipeData = {
             let refCodeDb = await refCode(inputData)
 
             if (refCodeDb) {
-                console.log(' GET from database')
+                console.log(` GET from database:${JSON.stringify(refCodeDb)}`)
                 timeSegmentProcessing = performance.now()
                 let totalTime = timeSegmentProcessing - startTimeSegmentProcessing
                 let timeSpeed = rangeTime(totalTime)
@@ -92,21 +92,28 @@ const checkClusterCache = async (inputData) => {
         let affiliateProductProgramCluster = await getDataCache(affiliateProductProgramClusterKey)
 
         // console.log('Redis Cluster affiliateProductProgramCluster:', affiliateProductProgramCluster)
+
+        let acProductClusterKey = `acProduct-${productId}`
+        let acProductCluster = await getDataCache(acProductClusterKey)
+        if (!acProductCluster) return
+        const {programId, productName, id} = acProductCluster
+
+
         if (affiliateProductProgramCluster) {
             const {affiliateProductProgramId} = affiliateProductProgramCluster
             refCodeClusterObj.programId = affiliateProductProgramId
+            refCodeClusterObj.productName = productName
             return reformatRefCodeData(refCodeClusterObj)
         } else {
-            let acProductClusterKey = `acProduct-${productId}`
-            let acProductCluster = await getDataCache(acProductClusterKey)
-
-            console.log('acProductCluster:', acProductCluster)
+            // console.log('acProductCluster:', acProductCluster)
             if (!acProductCluster) {
                 console.log('acProductCluster does not exists in redisCluster')
                 return
             }
-            const {programId} = acProductCluster
+
             refCodeClusterObj.programId = programId
+            refCodeClusterObj.productName = productName
+            refCodeClusterObj.productId = id || 0
             // console.log('Redis Cluster acProductClusterObj:', refCodeClusterObj)
             return reformatRefCodeData(refCodeClusterObj)
         }

@@ -14,6 +14,7 @@ const {
     setAcProducts,
     setRefCodesFile
 } = require('./cache/setData')
+const {getDataCache, setDataCache} = require('./cache/redis')
 
 if (cluster.isMaster) {
 
@@ -54,34 +55,86 @@ if (cluster.isMaster) {
         metrics.influxdb(500, `sflApiConnectError`)
     })
 
+    socket.on('filesSizeRefCodes', async (fileSizeInfo) => {
+
+        try {
+
+            let fileSizeInfoOld = await getDataCache('filesSizeRefCodes_')
+            if (!fileSizeInfoOld) {
+                socket.emit('sendingAffiliateProductProgram')
+                socket.emit('sendingAcProducts')
+                socket.emit('sendingRefCodes')
+                await setDataCache('filesSizeRefCodes_', fileSizeInfo)
+                logger.info(`Set to redis fileSizeInfo,${JSON.stringify(fileSizeInfo)}`)
+                metrics.influxdb(200, `fileSizeInfoDifferent-${computerName}`)
+                return
+            }
+            if (fileSizeInfoOld.acProductsData !== fileSizeInfo.acProductsData) {
+                logger.info(`!!!! FileSizeInfo change acProductsData,  OLD size: ${fileSizeInfoOld.acProductsData}, NEW size ${fileSizeInfo.acProductsData}`)
+                metrics.influxdb(200, `fileSizeInfoAcProductsDifferent-${computerName}`)
+                socket.emit('sendingAcProducts')
+            }
+
+            if (fileSizeInfoOld.affiliateProductProgram !== fileSizeInfo.affiliateProductProgram) {
+                logger.info(`!!!! FileSizeInfo change affiliateProductProgram, OLD size: ${fileSizeInfoOld.affiliateProductProgram}, NEW size ${fileSizeInfo.affiliateProductProgram}`)
+                metrics.influxdb(200, `fileSizeInfoAffiliateProductProgramDifferent-${computerName}`)
+                socket.emit('sendingAffiliateProductProgram')
+            }
+
+            if (fileSizeInfoOld.refCodesData !== fileSizeInfo.refCodesData) {
+                logger.info(`!!!! FileSizeInfo change refCodesData, OLD size: ${fileSizeInfoOld.refCodesData}, NEW size ${fileSizeInfo.refCodesData}`)
+                metrics.influxdb(200, `fileSizeInfoRefCodesDataDifferent-${computerName}`)
+                socket.emit('sendFileAffiliates')
+            }
+
+            await setDataCache('filesSizeRefCodes_', fileSizeInfo)
+        } catch (e) {
+            logger.error(`fileSizeInfoError:`, e)
+            metrics.influxdb(500, `fileSizeInfoError-${computerName}`)
+        }
+
+
+    })
+
+    const cronFileSizeInfo = async () => {
+        try {
+            let fileSizeInfo = await getDataCache('filesSizeRefCodes_') || []
+            console.log(` *** checking filesSizeRefCodes_ data:${JSON.stringify(fileSizeInfo)}`)
+            socket.emit('filesSizeRefCodes', fileSizeInfo)
+        } catch (e) {
+            logger.error(`cronFileSizeInfoError:`, e)
+        }
+
+    }
+
+    setInterval(cronFileSizeInfo, 600000) // 600000 -> 10min
+    // setTimeout(cronFileSizeInfo, 45000) // 45 sec, at application start
+
+
     ss(socket).on('sendingAffiliateProductProgram', (stream) => {
+        console.log('Got affiliateProductProgramFile:', affiliateProductProgramFile)
         stream.pipe(fs.createWriteStream(affiliateProductProgramFile))
         stream.on('end', () => {
-            // let size = getFileSize(campaignsFile) || 0
-            // logger.info(`campaigns file received, ${campaignsFile}, size:${size}`)
-            // metrics.influxdb(200, `fileReceivedCampaigns-size-${size}`)
             setTimeout(async () => {
                 if (config.env === 'development') return
                 try {
                     logger.info(` *** set Redis AffiliateProductProgram`)
                     await setAffiliateProductProgram()
-                    metrics.influxdb(200, `setRedisCampaigns-${computerName}`)
+                    metrics.influxdb(200, `setRedisAffiliateProductProgram-${computerName}`)
                 } catch (e) {
-                    logger.error(`setRedisCampaignsError:`, e)
-                    metrics.influxdb(500, `setRedisCampaignsError-${computerName}`)
+                    logger.error(`setRedisAffiliateProductProgramError:`, e)
+                    metrics.influxdb(500, `setRedisAffiliateProductProgramError-${computerName}`)
                 }
 
-            }, 40000) // 40 sec
+            }, 60000) // 60000 1m
 
         })
     })
 
     ss(socket).on('sendingAcProducts', (stream) => {
+        console.log('Got acProductsFile:', acProductsFile)
         stream.pipe(fs.createWriteStream(acProductsFile))
         stream.on('end', () => {
-            // let size = getFileSize(campaignsFile) || 0
-            // logger.info(`campaigns file received, ${campaignsFile}, size:${size}`)
-            // metrics.influxdb(200, `fileReceivedCampaigns-size-${size}`)
             setTimeout(async () => {
                 if (config.env === 'development') return
                 try {
@@ -89,21 +142,19 @@ if (cluster.isMaster) {
                     await setAcProducts()
                     metrics.influxdb(200, `setRedisAcProducts-${computerName}`)
                 } catch (e) {
-                    logger.error(`setRedisCampaignsError:`, e)
+                    logger.error(`setRedisAcProductsError:`, e)
                     metrics.influxdb(500, `setRedisAcProductsError-${computerName}`)
                 }
 
-            }, 30000) // 30 sec
+            }, 180000) // 3m 180000
 
         })
     })
 
     ss(socket).on('sendingRefCodes', (stream) => {
+        console.log('Got refCodesFile:', refCodesFile)
         stream.pipe(fs.createWriteStream(refCodesFile))
         stream.on('end', () => {
-            // let size = getFileSize(campaignsFile) || 0
-            // logger.info(`campaigns file received, ${campaignsFile}, size:${size}`)
-            // metrics.influxdb(200, `fileReceivedCampaigns-size-${size}`)
             setTimeout(async () => {
                 if (config.env === 'development') return
                 try {
@@ -115,15 +166,15 @@ if (cluster.isMaster) {
                     metrics.influxdb(500, `setRedisRefCodesError-${computerName}`)
                 }
 
-            }, 50000) // 50 sec
+            }, 120000) // 2m 120000
 
         })
     })
 
-    const getRecipeFromSflApiCache = async ()=>{
+    const getRecipeFromSflApiCache = async () => {
         if (config.env === 'development') return
         try {
-            logger.info('get recipe file from sfl-api-cache')
+            logger.info(' *** getRecipeFromSflApiCache get recipe file from sfl-api-cache')
             socket.emit('sendingAffiliateProductProgram')
             socket.emit('sendingAcProducts')
             socket.emit('sendingRefCodes')
@@ -132,11 +183,45 @@ if (cluster.isMaster) {
             metrics.influxdb(500, `emitSendFileOneTimeError`)
         }
     }
+    //
+    // setInterval(getRecipeFromSflApiCache, 3600000) // 3600000 -> 60 min
+    setTimeout(getRecipeFromSflApiCache, 25000) // 25000 -> 25 sec
 
-    setInterval(getRecipeFromSflApiCache, 3600000) // 3600000 -> 60 min
-    setTimeout(getRecipeFromSflApiCache, 45000) // 45000 -> 45 sec
+    const {getFileSize} = require('./lib/utils')
+    const checkFileSizeWithRedisSizeInfo = async () => {
 
+        console.log(' **** CheckFileSizeWithRedisSizeInfo:')
+        try {
+            let fileSizeInfoRedis = await getDataCache('filesSizeRefCodes_')
 
+            let affiliateProductProgramfile = config.recipe.affiliateProductProgram
+            let acProducts = config.recipe.acProducts
+            let refCodes = config.recipe.refCodes
+            let affiliateProductProgramSize = await getFileSize(affiliateProductProgramfile)
+            let acProductsSize = await getFileSize(acProducts)
+            let refCodesSize = await getFileSize(refCodes)
+
+            if (fileSizeInfoRedis.refCodesData !== refCodesSize) {
+                console.log('refCode not the same , will get new recipe file')
+                socket.emit('sendingRefCodes')
+            }
+            if (fileSizeInfoRedis.affiliateProductProgram !== affiliateProductProgramSize) {
+                console.log('affiliateProductProgram not the same , will get new recipe file')
+                socket.emit('sendingAffiliateProductProgram')
+
+            }
+            if (fileSizeInfoRedis.acProductsData !== acProductsSize) {
+                console.log('acProductsSize not the same , will get new recipe file')
+                socket.emit('sendingAcProducts')
+            }
+        } catch (e) {
+            console.log('checkFileSizeWithRedisSizeInfo', e)
+        }
+
+    }
+
+    setInterval(checkFileSizeWithRedisSizeInfo, 2586000) // 2586000 -> 43.1 min
+    // setTimeout(checkFileSizeWithRedisSizeInfo, 45000) // 45000 -> 45 sec
 
 } else {
     require('./worker')
