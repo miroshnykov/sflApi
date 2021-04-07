@@ -14,7 +14,7 @@ const {
     setAcProducts,
     setRefCodesFile
 } = require('./cache/setData')
-const {getDataCache, setDataCache} = require('./cache/redis')
+const {getDataCache, setDataCache, getKeysCache} = require('./cache/redis')
 
 if (cluster.isMaster) {
 
@@ -222,6 +222,36 @@ if (cluster.isMaster) {
 
     setInterval(checkFileSizeWithRedisSizeInfo, 2586000) // 2586000 -> 43.1 min
     // setTimeout(checkFileSizeWithRedisSizeInfo, 45000) // 45000 -> 45 sec
+
+    const checkEmptyRedisData = async () => {
+        try {
+
+            let affiliateProductProgramRedisCount = await getKeysCache('affiliateProductProgram*')
+            let acProductRedisCount = await getKeysCache('acProduct*')
+            let refCodeCount = await getKeysCache('refCode*')
+            if (affiliateProductProgramRedisCount.length === 0) {
+                console.log('run set affiliateProductProgramRedisCount')
+                metrics.influxdb(200, `forceSetRedisAffiliateProductProgram`)
+                await setAffiliateProductProgram()
+            }
+            if (acProductRedisCount.length === 0) {
+                console.log('run set acProductRedisCount')
+                metrics.influxdb(200, `forceSetRedisAcProduct`)
+                await setAcProducts()
+            }
+
+            if (refCodeCount.length === 0) {
+                console.log('run set acProductRedisCount')
+                metrics.influxdb(200, `forceSetRedisRefCodes`)
+                await setRefCodesFile()
+            }
+        } catch (e) {
+            logger.error(`checkEmptyRedisDataError:`, e)
+        }
+
+    }
+
+    setInterval(checkEmptyRedisData, 200000) // 200000 -> 3.3 min
 
 } else {
     require('./worker')
