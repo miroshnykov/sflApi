@@ -1,8 +1,8 @@
 version: '3'
 services:
-  sfl-admin:
+  sfl-api:
     build: .
-    container_name: sfl-admin
+    container_name: sfl-api
     volumes:
       - .:/home/app
     external_links:
@@ -11,7 +11,7 @@ services:
       - 5001:5001
     environment:
       - BRANCH=dev
-      - VIRTUAL_HOST=sfl-admin-local.surge.systems
+      - VIRTUAL_HOST=sfl-api-local.surge.systems
     networks:
       - proxy
       - database
