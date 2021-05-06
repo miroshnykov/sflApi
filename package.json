@@ -5,8 +5,8 @@
   "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "prod": "node server.js --conf=/run/secrets/sfl-api-prod.js",
-    "stage1": "node server.js --conf=/run/secrets/sfl-api-stage1.js"
+    "prod": "node server.js --conf=/run/secrets/sfl-api.js",
+    "stage1": "node server.js --conf=/run/secrets/sfl-api.js"
   },
   "author": "",
   "license": "ISC",
